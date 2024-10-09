@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import {
   FormControl,
   FormLabel,
@@ -15,19 +15,30 @@ import {
 } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
+import * as Yup from "yup";
 
 const Onboarding = () => {
-  const [input, setInput] = useState("");
+  const phoneRegExp =
+    /^[+][1]\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
 
-  function validateName(value) {
-    let error;
-    if (!value) {
-      error = "Name is required";
-    } else if (value.toLowerCase() !== "naruto") {
-      error = "Jeez! You're not a fan 😱";
-    }
-    return error;
-  }
+  const SignupSchema = Yup.object().shape({
+    firstName: Yup.string()
+      .min(2, "Too Short!")
+      .max(50, "Too Long!")
+      .required("Required"),
+    lastName: Yup.string()
+      .min(2, "Too Short!")
+      .max(50, "Too Long!")
+      .required("Required"),
+    phone: Yup.string()
+      .matches(phoneRegExp, "Phone number is not valid")
+      .required("Required"),
+    corporationNumber: Yup.string()
+      .matches(/^[0-9]*$/, "Numbers only")
+      .min(9, "Please enter 9 digit number")
+      .max(9, "Too long, please enter 9 digit number")
+      .required("Required"),
+  });
 
   return (
     <Container maxW="lg">
@@ -42,7 +53,13 @@ const Onboarding = () => {
         </CardHeader>
         <CardBody>
           <Formik
-            initialValues={{ firstName: "", lastName: "" }}
+            initialValues={{
+              firstName: "",
+              lastName: "",
+              phone: "",
+              corporationNumber: "",
+            }}
+            validationSchema={SignupSchema}
             onSubmit={(values, actions) => {
               setTimeout(() => {
                 alert(JSON.stringify(values, null, 2));
@@ -53,7 +70,7 @@ const Onboarding = () => {
             {(props) => (
               <Form>
                 <Grid gap={4}>
-                  <Field name="firstName" validate={validateName}>
+                  <Field name="firstName">
                     {({ field, form }) => (
                       <FormControl
                         isInvalid={
@@ -74,7 +91,7 @@ const Onboarding = () => {
                     )}
                   </Field>
 
-                  <Field name="lastName" validate={validateName}>
+                  <Field name="lastName">
                     {({ field, form }) => (
                       <FormControl
                         isInvalid={
@@ -95,23 +112,21 @@ const Onboarding = () => {
                     )}
                   </Field>
 
-                  <Field name="phoneNumber">
+                  <Field name="phone">
                     {({ field, form }) => (
                       <FormControl
-                        isInvalid={
-                          form.errors.phoneNumber && form.touched.phoneNumber
-                        }
+                        isInvalid={form.errors.phone && form.touched.phone}
                       >
-                        <FormLabel htmlFor="last-name">Phone Number</FormLabel>
+                        <FormLabel htmlFor="phone-number">
+                          Phone Number
+                        </FormLabel>
                         <Input
                           {...field}
                           size="lg"
                           placeholder="Enter number"
                           id="phone-number"
                         />
-                        <FormErrorMessage>
-                          {form.errors.phoneNumber}
-                        </FormErrorMessage>
+                        <FormErrorMessage>{form.errors.phone}</FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>
