@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 test("should show onboarding form", () => {
   render(<Onboarding />);
-  const inputNode = screen.getByText("First name");
+  const inputNode = screen.getByText("First Name");
 
   // Events and assertions...
 
