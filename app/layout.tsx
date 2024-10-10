@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ChakraProvider } from "@chakra-ui/react";
 import "./globals.css";
 import { fonts } from "@/fonts";
+import { ReactQueryProvider } from "@/lib/react-query-provider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={fonts.rubik.variable}>
       <body suppressHydrationWarning={true}>
-        <ChakraProvider>{children}</ChakraProvider>
+        <ChakraProvider>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </ChakraProvider>
       </body>
     </html>
   );

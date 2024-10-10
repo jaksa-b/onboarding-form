@@ -8,10 +8,10 @@ import {
   Button,
   Grid,
 } from "@chakra-ui/react";
-import fetch from "cross-fetch";
-import { Field, Form, Formik, useFormik } from "formik";
-import { ArrowForwardIcon } from "@chakra-ui/icons";
 import * as Yup from "yup";
+import { Field, FieldProps, Form, Formik } from "formik";
+import { ArrowForwardIcon } from "@chakra-ui/icons";
+import { checkCorporationNumber } from "@/lib/user";
 import { User } from "@/types";
 
 interface UserStepFormProps {
@@ -26,23 +26,12 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
     corporationNumber: "",
   };
 
-  const checkCorporationNumber = async (number: string) => {
+  const validateCorporationNumber = async (number: string) => {
     if (number?.length !== 9) return;
-    // console.log("checkCorporationNumber", number);
-
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_API_URL}/corporation-number/${number}`,
-      { next: { revalidate: 3600 } }
-    );
-
-    const corporationNumber = await res?.json();
-
-    return corporationNumber.valid;
+    return await checkCorporationNumber(number);
   };
 
   function onHandleSubmit(values: User) {
-    // console.log(values);
-
     onSubmit(values);
   }
 
@@ -68,17 +57,11 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
       .test(
         "corporationNumber",
         "Invalid corporation number",
-        async (value) => {
-          return await checkCorporationNumber(value);
+        async (value = "") => {
+          return await validateCorporationNumber(value);
         }
       )
       .required("Required"),
-  });
-
-  const formik = useFormik({
-    initialValues,
-    validationSchema: SignupSchema,
-    onSubmit: onHandleSubmit,
   });
 
   return (
@@ -91,10 +74,8 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
         <Form>
           <Grid gap={4}>
             <Field id="firstName" name="firstName">
-              {({ field, form }) => (
-                <FormControl
-                  isInvalid={form.errors.firstName && form.touched.firstName}
-                >
+              {({ field, meta }: FieldProps) => (
+                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
                   <FormLabel htmlFor="first-name">First Name</FormLabel>
                   <Input
                     {...field}
@@ -105,17 +86,15 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                     aria-label="First name"
                   />
                   <FormErrorMessage data-testid="firstNameError">
-                    {form.errors.firstName}
+                    {meta.error}
                   </FormErrorMessage>
                 </FormControl>
               )}
             </Field>
 
             <Field id="lastName" name="lastName">
-              {({ field, form }) => (
-                <FormControl
-                  isInvalid={form.errors.lastName && form.touched.lastName}
-                >
+              {({ field, meta }: FieldProps) => (
+                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
                   <FormLabel htmlFor="last-name">Last Name</FormLabel>
                   <Input
                     {...field}
@@ -125,17 +104,15 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                     data-testid="lastName"
                   />
                   <FormErrorMessage data-testid="lastNameError">
-                    {form.errors.lastName}
+                    {meta.error}
                   </FormErrorMessage>
                 </FormControl>
               )}
             </Field>
 
             <Field id="phone" name="phone">
-              {({ field, form }) => (
-                <FormControl
-                  isInvalid={form.errors.phone && form.touched.phone}
-                >
+              {({ field, meta }: FieldProps) => (
+                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
                   <FormLabel htmlFor="phone-number">Phone Number</FormLabel>
                   <Input
                     {...field}
@@ -145,23 +122,15 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                     data-testid="phone"
                   />
                   <FormErrorMessage data-testid="phoneError">
-                    {form.errors.phone}
+                    {meta.error}
                   </FormErrorMessage>
                 </FormControl>
               )}
             </Field>
 
             <Field id="corporationNumber" name="corporationNumber">
-              {({ field, form }) => (
-                <FormControl
-                  /* onBlur={(e) => {
-                          checkCorporationNumber(e.target.value);
-                        }} */
-                  isInvalid={
-                    form.errors.corporationNumber &&
-                    form.touched.corporationNumber
-                  }
-                >
+              {({ field, meta }: FieldProps) => (
+                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
                   <FormLabel htmlFor="last-name">Corporation Number</FormLabel>
                   <Input
                     {...field}
@@ -171,7 +140,7 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                     data-testid="corporationNumber"
                   />
                   <FormErrorMessage data-testid="corporationNumberError">
-                    {form.errors.corporationNumber}
+                    {meta?.error}
                   </FormErrorMessage>
                 </FormControl>
               )}

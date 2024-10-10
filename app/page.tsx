@@ -6,10 +6,12 @@ export default function Home() {
     <div>
       <main>
         <Container width="sm" mt={52}>
-          <Heading p={4}>Home page</Heading>
+          <Heading size="2xl" p={4}>
+            Welcome
+          </Heading>
           <Link href="/onboarding">
             <Button colorScheme="teal" size="lg" width="100%">
-              Start Onboarding
+              Start Your Journey
             </Button>
           </Link>
         </Container>
