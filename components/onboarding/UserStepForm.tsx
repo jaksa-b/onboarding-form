@@ -8,6 +8,7 @@ import {
   Button,
   Grid,
 } from "@chakra-ui/react";
+import fetch from "cross-fetch";
 import { Field, Form, Formik, useFormik } from "formik";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
 import * as Yup from "yup";
@@ -26,14 +27,21 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
   };
 
   const checkCorporationNumber = async (number: string) => {
-    console.log("checkCorporationNumber", number);
     if (number?.length !== 9) return;
+    // console.log("checkCorporationNumber", number);
 
-    return true;
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API_URL}/corporation-number/${number}`,
+      { next: { revalidate: 3600 } }
+    );
+
+    const corporationNumber = await res?.json();
+
+    return corporationNumber.valid;
   };
 
   function onHandleSubmit(values: User) {
-    console.log(values);
+    // console.log(values);
 
     onSubmit(values);
   }
@@ -57,6 +65,13 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
       .matches(/^[0-9]*$/, "Numbers only")
       .min(9, "Please enter 9 digit number")
       .max(9, "Too long, please enter 9 digit number")
+      .test(
+        "corporationNumber",
+        "Invalid corporation number",
+        async (value) => {
+          return await checkCorporationNumber(value);
+        }
+      )
       .required("Required"),
   });
 
@@ -70,13 +85,6 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
     <Formik
       initialValues={initialValues}
       validationSchema={SignupSchema}
-      /* onSubmit={(values: User, actions: FormikHelpers<User>) => {
-        setTimeout(() => {
-          alert(JSON.stringify(values, null, 2));
-          actions.setSubmitting(false);
-        }, 1000);
-      }} */
-
       onSubmit={onHandleSubmit}
     >
       {(props) => (
@@ -91,11 +99,14 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                   <Input
                     {...field}
                     size="lg"
+                    id="firstName"
                     placeholder="Enter name"
-                    id="first-name"
                     data-testid="firstName"
+                    aria-label="First name"
                   />
-                  <FormErrorMessage>{form.errors.firstName}</FormErrorMessage>
+                  <FormErrorMessage data-testid="firstNameError">
+                    {form.errors.firstName}
+                  </FormErrorMessage>
                 </FormControl>
               )}
             </Field>
@@ -113,7 +124,9 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                     id="last-name"
                     data-testid="lastName"
                   />
-                  <FormErrorMessage>{form.errors.lastName}</FormErrorMessage>
+                  <FormErrorMessage data-testid="lastNameError">
+                    {form.errors.lastName}
+                  </FormErrorMessage>
                 </FormControl>
               )}
             </Field>
@@ -131,7 +144,9 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                     id="phone-number"
                     data-testid="phone"
                   />
-                  <FormErrorMessage>{form.errors.phone}</FormErrorMessage>
+                  <FormErrorMessage data-testid="phoneError">
+                    {form.errors.phone}
+                  </FormErrorMessage>
                 </FormControl>
               )}
             </Field>
@@ -155,7 +170,7 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
                     id="corporation-number"
                     data-testid="corporationNumber"
                   />
-                  <FormErrorMessage>
+                  <FormErrorMessage data-testid="corporationNumberError">
                     {form.errors.corporationNumber}
                   </FormErrorMessage>
                 </FormControl>
