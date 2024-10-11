@@ -15,7 +15,7 @@ import {
 import UserStepForm from "@/components/onboarding/UserStepForm";
 import { Respose, User } from "@/types";
 import { useMutation } from "@tanstack/react-query";
-import { saveUser } from "@/lib/user";
+import { saveUser } from "@/lib/api";
 import { ArrowBackIcon, CheckCircleIcon } from "@chakra-ui/icons";
 import Link from "next/link";
 

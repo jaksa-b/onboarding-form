@@ -128,7 +128,7 @@ describe("UserStepForm", () => {
 
   it("should not show error if corporation number is valid from the API", async () => {
     // Mock the response for corporation number check
-    fetchMock.mockResponseOnce(JSON.stringify({ valid: false }));
+    fetchMock.mockResponseOnce(JSON.stringify({ valid: true }));
 
     await fillForm("John", "Doe", "+1234567890", "123456789");
 

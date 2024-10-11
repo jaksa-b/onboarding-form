@@ -12,7 +12,7 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
 import { User } from "@/types";
-import { useCheckCorporationNumber } from "@/lib/user";
+import { useCheckCorporationNumber } from "@/lib/api";
 
 interface UserStepFormProps {
   onSubmit: (values: User) => void;
