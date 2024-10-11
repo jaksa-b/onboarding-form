@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   FormControl,
   FormLabel,
@@ -9,10 +9,10 @@ import {
   Grid,
 } from "@chakra-ui/react";
 import * as Yup from "yup";
-import { Field, FieldProps, Form, Formik } from "formik";
+import { useFormik } from "formik";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
-import { checkCorporationNumber } from "@/lib/user";
 import { User } from "@/types";
+import { useCheckCorporationNumber } from "@/lib/user";
 
 interface UserStepFormProps {
   onSubmit: (values: User) => void;
@@ -26,141 +26,140 @@ const UserStepForm = ({ onSubmit }: UserStepFormProps) => {
     corporationNumber: "",
   };
 
-  const validateCorporationNumber = async (number: string) => {
-    if (number?.length !== 9) return;
-    return await checkCorporationNumber(number);
-  };
-
-  function onHandleSubmit(values: User) {
-    onSubmit(values);
-  }
-
   const phoneRegExp =
     /^[+][1]\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
 
-  const SignupSchema = Yup.object().shape({
-    firstName: Yup.string()
-      .min(2, "Too Short!")
-      .max(50, "Too Long!")
-      .required("Required"),
-    lastName: Yup.string()
-      .min(2, "Too Short!")
-      .max(50, "Too Long!")
-      .required("Required"),
-    phone: Yup.string()
-      .matches(phoneRegExp, "Phone number is not valid")
-      .required("Required"),
-    corporationNumber: Yup.string()
-      .matches(/^[0-9]*$/, "Numbers only")
-      .min(9, "Please enter 9 digit number")
-      .max(9, "Too long, please enter 9 digit number")
-      .test(
-        "corporationNumber",
-        "Invalid corporation number",
-        async (value = "") => {
-          return await validateCorporationNumber(value);
-        }
-      )
-      .required("Required"),
+  const formik = useFormik({
+    initialValues,
+    validationSchema: Yup.object().shape({
+      firstName: Yup.string()
+        .min(2, "Too Short!")
+        .max(50, "Too Long!")
+        .required("Required"),
+      lastName: Yup.string()
+        .min(2, "Too Short!")
+        .max(50, "Too Long!")
+        .required("Required"),
+      phone: Yup.string()
+        .matches(phoneRegExp, "Phone number is not valid")
+        .required("Required"),
+      corporationNumber: Yup.string()
+        .matches(/^[0-9]{9}$/, "Please enter 9 digit number")
+        .required("Required"),
+    }),
+    onSubmit: (values) => {
+      onSubmit(values);
+    },
   });
 
+  const { values, setFieldError, isSubmitting } = formik;
+
+  const {
+    data: isValidCorporationNumber,
+    error: corporationNumberError,
+    isFetching,
+  } = useCheckCorporationNumber(values.corporationNumber);
+
+  useEffect(() => {
+    if (!isFetching && values.corporationNumber.length === 9) {
+      if (corporationNumberError || !isValidCorporationNumber) {
+        setFieldError("corporationNumber", "Invalid corporation number");
+      }
+    }
+  }, [
+    isFetching,
+    isValidCorporationNumber,
+    corporationNumberError,
+    values.corporationNumber,
+    setFieldError,
+  ]);
+
   return (
-    <Formik
-      initialValues={initialValues}
-      validationSchema={SignupSchema}
-      onSubmit={onHandleSubmit}
-    >
-      {(props) => (
-        <Form>
-          <Grid gap={4}>
-            <Field id="firstName" name="firstName">
-              {({ field, meta }: FieldProps) => (
-                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
-                  <FormLabel htmlFor="first-name">First Name</FormLabel>
-                  <Input
-                    {...field}
-                    size="lg"
-                    id="firstName"
-                    placeholder="Enter name"
-                    data-testid="firstName"
-                    aria-label="First name"
-                  />
-                  <FormErrorMessage data-testid="firstNameError">
-                    {meta.error}
-                  </FormErrorMessage>
-                </FormControl>
-              )}
-            </Field>
-
-            <Field id="lastName" name="lastName">
-              {({ field, meta }: FieldProps) => (
-                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
-                  <FormLabel htmlFor="last-name">Last Name</FormLabel>
-                  <Input
-                    {...field}
-                    size="lg"
-                    placeholder="Enter last name"
-                    id="last-name"
-                    data-testid="lastName"
-                  />
-                  <FormErrorMessage data-testid="lastNameError">
-                    {meta.error}
-                  </FormErrorMessage>
-                </FormControl>
-              )}
-            </Field>
-
-            <Field id="phone" name="phone">
-              {({ field, meta }: FieldProps) => (
-                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
-                  <FormLabel htmlFor="phone-number">Phone Number</FormLabel>
-                  <Input
-                    {...field}
-                    size="lg"
-                    placeholder="Enter number"
-                    id="phone-number"
-                    data-testid="phone"
-                  />
-                  <FormErrorMessage data-testid="phoneError">
-                    {meta.error}
-                  </FormErrorMessage>
-                </FormControl>
-              )}
-            </Field>
-
-            <Field id="corporationNumber" name="corporationNumber">
-              {({ field, meta }: FieldProps) => (
-                <FormControl isInvalid={Boolean(meta.error && meta.touched)}>
-                  <FormLabel htmlFor="last-name">Corporation Number</FormLabel>
-                  <Input
-                    {...field}
-                    size="lg"
-                    placeholder="Corporation number"
-                    id="corporation-number"
-                    data-testid="corporationNumber"
-                  />
-                  <FormErrorMessage data-testid="corporationNumberError">
-                    {meta?.error}
-                  </FormErrorMessage>
-                </FormControl>
-              )}
-            </Field>
-          </Grid>
-          <Button
-            mt={4}
-            colorScheme="teal"
-            isLoading={props.isSubmitting}
-            type="submit"
-            width="100%"
-            loadingText="Submitting"
+    <form onSubmit={formik.handleSubmit}>
+      <Grid gap={4}>
+        <FormControl
+          isInvalid={!!formik.errors.firstName && formik.touched.firstName}
+        >
+          <FormLabel htmlFor="first-name">First Name</FormLabel>
+          <Input
+            id="firstName"
+            {...formik.getFieldProps("firstName")}
+            placeholder="Enter name"
             size="lg"
-            rightIcon={<ArrowForwardIcon />}
-          >
-            Submit
-          </Button>
-        </Form>
-      )}
-    </Formik>
+            aria-label="First name"
+            data-testid="firstName"
+          />
+          <FormErrorMessage data-testid="firstNameError">
+            {formik.errors.firstName}
+          </FormErrorMessage>
+        </FormControl>
+
+        <FormControl
+          isInvalid={!!formik.errors.lastName && formik.touched.lastName}
+        >
+          <FormLabel htmlFor="last-name">Last Name</FormLabel>
+          <Input
+            id="lastName"
+            {...formik.getFieldProps("lastName")}
+            placeholder="Enter last name"
+            size="lg"
+            aria-label="Last name"
+            data-testid="lastName"
+          />
+          <FormErrorMessage data-testid="lastNameError">
+            {formik.errors.lastName}
+          </FormErrorMessage>
+        </FormControl>
+
+        <FormControl isInvalid={!!formik.errors.phone && formik.touched.phone}>
+          <FormLabel htmlFor="phone">Phone Number</FormLabel>
+          <Input
+            id="phone"
+            {...formik.getFieldProps("phone")}
+            placeholder="Enter phone number"
+            size="lg"
+            aria-label="Phone number"
+            data-testid="phone"
+          />
+          <FormErrorMessage data-testid="phoneError">
+            {formik.errors.phone}
+          </FormErrorMessage>
+        </FormControl>
+
+        <FormControl
+          isInvalid={
+            !!formik.errors.corporationNumber &&
+            formik.touched.corporationNumber
+          }
+        >
+          <FormLabel htmlFor="corporation-number">Corporation Number</FormLabel>
+          <Input
+            id="corporationNumber"
+            {...formik.getFieldProps("corporationNumber")}
+            placeholder="Enter 9 digit corporation number"
+            size="lg"
+            aria-label="Corporation number"
+            data-testid="corporationNumber"
+          />
+          <FormErrorMessage data-testid="corporationNumberError">
+            {formik.errors.corporationNumber}
+          </FormErrorMessage>
+        </FormControl>
+      </Grid>
+
+      <Button
+        mt={4}
+        colorScheme="teal"
+        isLoading={isSubmitting}
+        type="submit"
+        width="100%"
+        loadingText="Submitting"
+        size="lg"
+        rightIcon={<ArrowForwardIcon />}
+      >
+        Submit
+      </Button>
+    </form>
   );
 };
 

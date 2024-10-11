@@ -1,14 +1,21 @@
-import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import UserStepForm from "@/components/onboarding/UserStepForm";
 import fetchMock from "jest-fetch-mock";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 beforeEach(() => {
   fetchMock.resetMocks();
 });
 
 fetchMock.mockResponseOnce(JSON.stringify({ valid: true }));
+
+const renderWithQueryClient = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+  );
+};
 
 describe("UserStepForm", () => {
   const mockOnSubmit = jest.fn();
@@ -34,7 +41,7 @@ describe("UserStepForm", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    render(<UserStepForm onSubmit={mockOnSubmit} />);
+    renderWithQueryClient(<UserStepForm onSubmit={mockOnSubmit} />);
   });
 
   it("should validate the form and show error if first name is too short", async () => {
